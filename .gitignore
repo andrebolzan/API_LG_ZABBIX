@@ -8,4 +8,4 @@ __pycache__
 # Ignore Mac system files
 .DS_Store
 # Ignore devcontainer for now (should this go in source control?)
-.devcontainer
+.devcontainerwideq_state.json
