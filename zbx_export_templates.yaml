@@ -18,7 +18,7 @@ zabbix_export:
         cd /usr/lib/zabbix/externalscripts/API_LG
         
         # Listar ID dos dispositivos para adicionar na macro {$AC.POP.ID}
-         python3 example.py -c BR -l en-US ls
+         python3 teste.py -c BR -l en-US ls
       groups:
         - name: Templates
       items:

@@ -3,9 +3,9 @@ Domoticz LG ThinQ (with WideQ) plugin.
 
 ![alt text](https://raw.githubusercontent.com/majki09/domoticz_lg_thinq_plugin/main/domoticz.jpg "LG ThinQ plugin in domoticz")
 
-:warning: **New users of LG ThinQ**: This library only works with v2 of the LG ThinQ API. You can check if your device is compatible when you execute the `example.py`. To use it, provide it with a country and language code via the `-c` and `-l` flags, respectively:
+:warning: **New users of LG ThinQ**: This library only works with v2 of the LG ThinQ API. You can check if your device is compatible when you execute the `teste.py`. To use it, provide it with a country and language code via the `-c` and `-l` flags, respectively:
 
-    $ python3 example.py -c US -l en-US
+    $ python3 teste.py -c US -l en-US
 
 LG accounts seem to be associated with specific countries, so be sure to use the one with which you originally created your account. For Polish, for example, you'd use `-c PL -l en-US`.
 
@@ -25,7 +25,7 @@ Installation
 
 2. Login and get your token. Put your own country and language codes.
 
-       $ python3 example.py -c US -l en-US
+       $ python3 teste.py -c US -l en-US
  
    Copy and go to given address with your browser. Log in, copy new address from your browser and paste it to console window. 
 
