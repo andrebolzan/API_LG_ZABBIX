@@ -215,6 +215,8 @@ API_ERRORS = {
     "0110": AgreementError,
     9000: InvalidRequestError,  # Surprisingly, an integer (not a string).
     9003: NotLoggedInError,  # Session Creation FailureError
+    9012: NotLoggedInError,  # Token/session rejected by API.
+    "9012": NotLoggedInError,
 }
 
 
