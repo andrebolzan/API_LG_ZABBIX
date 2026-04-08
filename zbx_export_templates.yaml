@@ -1,0 +1,155 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 7df96b18c230490a9a0a9e2307226338
+      name: Templates
+  templates:
+    - uuid: a2fb698ac9be4fd7a3aa63d07600a3b1
+      template: 'AC LG - API V2 Token'
+      name: 'AC LG - API V2 Token'
+      description: |
+        Template para API LG ThinQ Connect (V2) com autenticacao por token (PAT).
+
+        Formato de retorno esperado do check_LG_AC.sh:
+        status;tempAtual;tempMeta;modo;fan;consumo
+
+        Exemplo de descoberta de dispositivos:
+        python3 teste.py ls
+
+        Use o ID retornado no comando acima na macro {$LG.AC.ID}.
+      groups:
+        - name: Templates
+      items:
+        - uuid: b5c54a98f16f4796854460649b2b6ebf
+          name: 'LG AC - Raw Status'
+          type: EXTERNAL
+          key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+          delay: 5m
+          history: 30d
+          value_type: TEXT
+          trends: '0'
+          description: 'Retorno bruto no formato: status;tempAtual;tempMeta;modo;fan;consumo'
+          triggers:
+            - uuid: 6eb553f4d52c4346a5ec8bf92ea65667
+              expression: 'find(/AC LG - API V2 Token/check_LG_AC.sh["-D","{$LG.AC.ID}"],,"like","0;;;;;")=1'
+              name: 'Erro na API LG V2'
+              priority: DISASTER
+        - uuid: e3f460a6f2f74cd6a17ce753b9260fad
+          name: STATUS
+          type: DEPENDENT
+          key: STATUS
+          delay: '0'
+          history: 30d
+          valuemap:
+            name: 'LG AC Status'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '([0-9]*);([0-9]*);([0-9]*);(\w{3,4});(\w{3,4});([0-9]*)'
+                - \1
+          master_item:
+            key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+          triggers:
+            - uuid: 9a4144f86bd041fca6f45b1241c9fdb8
+              expression: 'last(/AC LG - API V2 Token/STATUS)<>1'
+              name: 'AC desligado'
+              priority: HIGH
+        - uuid: 4e8da8eb4f9d475cae3dbe5b767566a5
+          name: 'Temperatura Atual'
+          type: DEPENDENT
+          key: TemperaturaAtual
+          delay: '0'
+          history: 30d
+          value_type: FLOAT
+          units: C
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '([0-9]*);([0-9]*);([0-9]*);(\w{3,4});(\w{3,4});([0-9]*)'
+                - \2
+          master_item:
+            key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+          triggers:
+            - uuid: 20af3bcc90a44368bd213e22d94fd43d
+              expression: 'last(/AC LG - API V2 Token/TemperaturaAtual)>={$LG.AC.TEMP.MAX}'
+              name: 'Temperatura alta'
+              event_name: 'Temperatura acima do limite - {ITEM.LASTVALUE1}'
+              priority: HIGH
+        - uuid: 8f3158c4e5e644599ae2de428fa5dd78
+          name: 'Temperatura Meta'
+          type: DEPENDENT
+          key: TemperaturaMeta
+          delay: '0'
+          history: 30d
+          value_type: FLOAT
+          units: C
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '([0-9]*);([0-9]*);([0-9]*);(\w{3,4});(\w{3,4});([0-9]*)'
+                - \3
+          master_item:
+            key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+        - uuid: f1b0895473274467bcd80d8fca0a5bcf
+          name: 'Modo de Funcionamento'
+          type: DEPENDENT
+          key: ModoFuncionamento
+          delay: '0'
+          history: 30d
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '([0-9]*);([0-9]*);([0-9]*);(\w{3,4});(\w{3,4});([0-9]*)'
+                - \4
+          master_item:
+            key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+          triggers:
+            - uuid: 7e3f9fcb5c7b462090f4cc56db2da917
+              expression: 'last(/AC LG - API V2 Token/ModoFuncionamento)<>"COOL"'
+              name: 'Modo fora do padrao'
+              priority: WARNING
+        - uuid: 7ca0ea57c113414fafe5f8236b1fa8cf
+          name: Ventilador
+          type: DEPENDENT
+          key: Ventilador
+          delay: '0'
+          history: 30d
+          value_type: TEXT
+          trends: '0'
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '([0-9]*);([0-9]*);([0-9]*);(\w{3,4});(\w{3,4});([0-9]*)'
+                - \5
+          master_item:
+            key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+        - uuid: 087cb4f44bd24ec4916f85ed8be6d8f2
+          name: 'Consumo (estimado)'
+          type: DEPENDENT
+          key: ConsumoWatt
+          delay: '0'
+          history: 30d
+          value_type: FLOAT
+          units: W
+          preprocessing:
+            - type: REGEX
+              parameters:
+                - '([0-9]*);([0-9]*);([0-9]*);(\w{3,4});(\w{3,4});([0-9]*)'
+                - \6
+          master_item:
+            key: 'check_LG_AC.sh["-D","{$LG.AC.ID}"]'
+      macros:
+        - macro: '{$LG.AC.ID}'
+          value: 'COLE_O_DEVICE_ID_AQUI'
+        - macro: '{$LG.AC.TEMP.MAX}'
+          value: '25'
+      valuemaps:
+        - uuid: b9ad51e8e85f460e953f53591f111b4e
+          name: 'LG AC Status'
+          mappings:
+            - value: '1'
+              newvalue: 'On'
+            - value: '0'
+              newvalue: 'Off'

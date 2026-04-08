@@ -16,3 +16,6 @@ wideq_state.json.bak.*
 # V2 local state
 lg_v2_state.json
 .env
+
+# Legacy archive
+old/

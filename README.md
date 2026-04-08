@@ -13,6 +13,16 @@ Fontes oficiais:
 - `check_LG_AC.sh`: wrapper para compatibilidade com item antigo do Zabbix.
 - `lg_v2_state.json`: arquivo local gerado automaticamente para guardar `client_id` e `country`.
 
+## Arquivo lg_v2_state.json
+
+Funcao do arquivo:
+- Guardar estado local da integracao v2 para reutilizacao entre execucoes.
+- Armazenar principalmente `client_id` (UUID gerado automaticamente) e `country`.
+
+Importante:
+- Ele **nao** guarda o PAT/token secreto.
+- O token deve ficar em `.env`, variavel de ambiente ou outro local seguro.
+
 ## Requisitos
 
 - Python 3
@@ -24,6 +34,16 @@ Instalacao de dependencia:
 ```bash
 pip3 install requests
 ```
+
+## Como Criar o PAT
+
+1. Acesse: `https://connect-pat.lgthinq.com`
+2. Faca login com a conta ThinQ.
+3. Clique em `ADD NEW TOKEN`.
+4. Informe o nome do token.
+5. Selecione os recursos (features) que deseja usar.
+6. Clique em `CREATE TOKEN`.
+7. Copie o token gerado para uso no script.
 
 ## Formas de informar o token
 
@@ -48,6 +68,15 @@ PAT=SEU_PAT
 LG_THINQ_COUNTRY=BR
 ```
 
+Criar o arquivo `.env` automaticamente:
+
+```bash
+cat > .env <<'EOF'
+PAT=SEU_PAT
+LG_THINQ_COUNTRY=BR
+EOF
+```
+
 ## Comandos
 
 Listar dispositivos (alias;tipo;id):
@@ -56,11 +85,18 @@ Listar dispositivos (alias;tipo;id):
 python3 teste.py ls
 ```
 
+Importante para Zabbix:
+- O `ID` retornado no `ls` e o identificador que voce deve usar no template/macro do Zabbix.
+- Guarde esse `ID` corretamente para cada equipamento monitorado.
+
 Listar dispositivos em JSON:
 
 ```bash
 python3 teste.py ls --raw
 ```
+
+Sobre `--raw`:
+- O `--raw` exibe todos os dados retornados pela API em JSON (saida completa, sem resumo).
 
 Status de um dispositivo:
 
@@ -73,3 +109,16 @@ Perfil de um dispositivo:
 ```bash
 python3 teste.py profile <DEVICE_ID> --raw
 ```
+
+## Grafana (Automatico com Zabbix)
+
+Arquivo pronto para import:
+- `grafana_dashboard_zabbix_v2.json`
+
+Esse dashboard usa variaveis para listar automaticamente os equipamentos (hosts) do grupo selecionado no Zabbix.
+
+Passos:
+1. Importe o arquivo `grafana_dashboard_zabbix_v2.json` no Grafana.
+2. Selecione o datasource do Zabbix (plugin `alexanderzobnin-zabbix-datasource`).
+3. Em `Grupo`, escolha o grupo onde estao os hosts com o template LG v2.
+4. O dashboard passa a exibir automaticamente todos os hosts/equipamentos desse grupo.
