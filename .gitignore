@@ -11,3 +11,4 @@ __pycache__
 .devcontainerwideq_state.json
 
 wideq_state.json.bak.*
+.codex
