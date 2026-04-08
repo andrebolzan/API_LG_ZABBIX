@@ -1,96 +1,23 @@
-# API LG para Zabbix
+# API LG Zabbix (V2 Token Method)
 
-Script Python para integrar dispositivos LG ThinQ (API v2) com o Zabbix via `externalscripts`.
+Repositorio focado no novo metodo oficial da LG ThinQ Connect com autenticacao por token (PAT).
 
-## Base do projeto
+## Estrutura
 
-Este projeto e baseado em `wideq`, de Sampson (Adrian Sampson):
+- `v2/API_LG.py`: cliente principal ThinQ Connect v2.
+- `v2/teste.py`: atalho para testes locais.
+- `v2/README.md`: documentacao detalhada do fluxo v2.
+- `check_LG_AC.sh`: wrapper para compatibilidade com item antigo do Zabbix.
 
-- https://github.com/sampsyo/wideq
+## Referencia oficial
 
-Neste repositorio, a logica customizada fica principalmente em `API_LG.py`.
-O `wideq` e obtido do repositorio oficial durante a instalacao para manter a versao atualizada.
+- https://smartsolution.developer.lge.com/en/apiManage/thinq_connect?s=1775682127433
+- https://github.com/thinq-connect/pythinqconnect
 
-## Conteudo do repositorio
-
-- `API_LG.py`: script principal para autenticar, listar dispositivos e executar comandos.
-- `install.sh`: instalador automatico para ambiente Zabbix.
-- `autenticacaoAPI.txt`: anotacoes de autenticacao e testes.
-
-## Requisitos
-
-- Linux com Zabbix Server/Proxy
-- Python 3
-- Usuario `zabbix` no sistema
-- Acesso a internet para autenticar com a conta LG
-
-## Instalacao
-
-1. Clone este repositorio no servidor Zabbix.
-2. Execute o instalador como root:
+## Uso rapido
 
 ```bash
-sudo bash install.sh
-```
-
-O instalador faz:
-
-- Copia `API_LG.py` para `/usr/lib/zabbix/externalscripts/API_LG`
-- Baixa o `wideq` direto de `https://github.com/sampsyo/wideq` (com fallback para copia local)
-- Cria `/usr/lib/zabbix/externalscripts/API_LG/wideq_state.json` (se nao existir)
-- Ajusta permissoes e owner para `zabbix:zabbix` (quando usuario/grupo existem)
-- Instala `python3-requests` e `git` (dependencias obrigatorias)
-
-## Primeira autenticacao LG
-
-Execute como usuario do Zabbix:
-
-```bash
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/API_LG/API_LG.py -c BR -l en-US ls
-```
-
-Na primeira execucao, o script vai:
-
-1. Exibir a URL de login LG
-2. Pedir a URL de retorno (callback)
-3. Salvar o token em `wideq_state.json`
-
-## Testes basicos
-
-Listar dispositivos:
-
-```bash
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/API_LG/API_LG.py -c BR -l en-US ls
-```
-
-Ler informacoes de um dispositivo:
-
-```bash
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/API_LG/API_LG.py -c BR -l en-US info <DEVICE_ID>
-```
-
-Ligar/desligar (AC):
-
-```bash
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/API_LG/API_LG.py -c BR -l en-US turn <DEVICE_ID> on
-sudo -u zabbix python3 /usr/lib/zabbix/externalscripts/API_LG/API_LG.py -c BR -l en-US turn <DEVICE_ID> off
-```
-
-## Comandos suportados
-
-- `ls`
-- `mon <DEVICE_ID>`
-- `info <DEVICE_ID>`
-- `turn <DEVICE_ID> on|off`
-- `set-temp <DEVICE_ID> <TEMP>`
-- `set-temp-freezer <DEVICE_ID> <TEMP>`
-- `set-temp-hot-water <DEVICE_ID> <TEMP>`
-- `ac-config <DEVICE_ID>`
-
-## Publicar no GitHub
-
-```bash
-git add README.md install.sh
-git commit -m "Adiciona instalador e documentacao"
-git push
+cd v2
+python3 teste.py ls --raw
+python3 teste.py status <DEVICE_ID> --raw
 ```

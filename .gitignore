@@ -8,7 +8,11 @@ __pycache__
 # Ignore Mac system files
 .DS_Store
 # Ignore devcontainer for now (should this go in source control?)
-.devcontainerwideq_state.json
+.devcontainer
 
 wideq_state.json.bak.*
 .codex
+
+# V2 local state
+v2/lg_v2_state.json
+v2/.env
