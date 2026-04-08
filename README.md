@@ -45,6 +45,35 @@ git clone https://github.com/andrebolzan/API_LG_ZABBIX.git
 cd API_LG_ZABBIX
 ```
 
+## Permissoes E Diretorio No Zabbix
+
+Ajuste owner/permissoes da pasta:
+
+```bash
+sudo chown -R zabbix:zabbix /usr/lib/zabbix/externalscripts/API_LG_ZABBIX
+sudo chmod -R 750 /usr/lib/zabbix/externalscripts/API_LG_ZABBIX
+```
+
+Configure o diretorio de scripts externos no Zabbix:
+
+- Server: arquivo `zabbix_server.conf`
+- Proxy: arquivo `zabbix_proxy.conf`
+- Parametro: `ExternalScripts`
+
+Exemplo:
+
+```conf
+ExternalScripts=/usr/lib/zabbix/externalscripts/API_LG_ZABBIX
+```
+
+Depois reinicie o servico correspondente:
+
+```bash
+sudo systemctl restart zabbix-server
+# ou
+sudo systemctl restart zabbix-proxy
+```
+
 ## Como Criar o PAT
 
 1. Acesse: `https://connect-pat.lgthinq.com`
