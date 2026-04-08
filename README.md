@@ -35,6 +35,16 @@ Instalacao de dependencia:
 pip3 install requests
 ```
 
+## Download Para Zabbix
+
+Para baixar direto no diretorio de scripts externos do Zabbix:
+
+```bash
+cd /usr/lib/zabbix/externalscripts
+git clone https://github.com/andrebolzan/API_LG_ZABBIX.git
+cd API_LG_ZABBIX
+```
+
 ## Como Criar o PAT
 
 1. Acesse: `https://connect-pat.lgthinq.com`
