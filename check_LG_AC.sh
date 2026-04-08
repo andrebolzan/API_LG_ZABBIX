@@ -5,7 +5,7 @@ set -u
 # status;temp_atual;temp_meta;modo;ventilador;consumo
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-V2_TEST_SCRIPT="${SCRIPT_DIR}/v2/teste.py"
+V2_TEST_SCRIPT="${SCRIPT_DIR}/teste.py"
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 
 DEVICE_ID=""

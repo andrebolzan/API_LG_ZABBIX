@@ -14,5 +14,5 @@ wideq_state.json.bak.*
 .codex
 
 # V2 local state
-v2/lg_v2_state.json
-v2/.env
+lg_v2_state.json
+.env
