@@ -10,10 +10,45 @@ import os.path
 import logging
 
 STATE_FILE_NAME = "/usr/lib/zabbix/externalscripts/API_LG//wideq_state.json"
-#LOGGER = logging.getLogger("wideq.example")
-#LOGGER = logging.getLogger("wideq.example")
+LOGGER = logging.getLogger("wideq.example")
 
 STATE_FILE = STATE_FILE_NAME
+
+
+def _patch_wideq_api_errors():
+    """Add compatibility mapping for newer LG API error codes."""
+    try:
+        wideq.core.API_ERRORS[9012] = wideq.NotLoggedInError
+        wideq.core.API_ERRORS["9012"] = wideq.NotLoggedInError
+    except Exception:
+        pass
+
+
+def _sanitize_state(state):
+    """Normalize state file content so Client.load won't break."""
+    if not isinstance(state, dict):
+        return {}
+
+    clean = {}
+    gateway = state.get("gateway")
+    if isinstance(gateway, dict) and gateway.get("auth_base") and gateway.get("api_root") and gateway.get("oauth_root"):
+        clean["gateway"] = gateway
+
+    auth = state.get("auth")
+    if isinstance(auth, dict) and all(auth.get(key) for key in ("access_token", "refresh_token", "user_number", "oauth_root")):
+        clean["auth"] = auth
+
+    if "auth" in clean and state.get("session"):
+        clean["session"] = state["session"]
+
+    if isinstance(state.get("model_info"), dict):
+        clean["model_info"] = state["model_info"]
+    if isinstance(state.get("country"), str):
+        clean["country"] = state["country"]
+    if isinstance(state.get("language"), str):
+        clean["language"] = state["language"]
+
+    return clean
 
 def authenticate(gateway):
     """Interactively authenticate the user via a browser to get an OAuth
@@ -47,7 +82,7 @@ def ls(client):
     else:
         print("\n--------------------------------------------------------------------------------")
         print("You don't have any thinq2 (LG API V2) device. This plugin will not work for you.")
-        print("wideq_state.json file will NOT be generated.")
+        print("wideq_state.json will still be updated with authentication/session data.")
         print("--------------------------------------------------------------------------------")
 
 
@@ -265,15 +300,17 @@ def example(country: str,
             cmd="",
             state=None,
             args=None):
+    _patch_wideq_api_errors()
+
     if args is None:
         args = []
     if state is None:
-        state = {"gateway": {}, "auth": {}}
+        state = {}
     if verbose:
         wideq.set_log_level(logging.DEBUG)
 
     # Load the current state for the example.
-    if state["gateway"] != {} and state["auth"] != {}:
+    if state.get("gateway") and state.get("auth"):
         # if state data comes from Domoticz Configuration
         LOGGER.info("State data loaded from Domoticz Configuration.")
     else:
@@ -290,6 +327,7 @@ def example(country: str,
             LOGGER.error("Broken wideq_state.json file?")
             raise IOError
 
+    state = _sanitize_state(state)
     client = wideq.Client.load(state)
     if country:
         client._country = country
@@ -301,6 +339,8 @@ def example(country: str,
         client._auth = authenticate(client.gateway)
 
     # Loop to retry if session has expired.
+    max_refresh_tries = 3
+    refresh_attempts = 0
     while True:
         try:
             ac = None
@@ -311,7 +351,17 @@ def example(country: str,
             break
 
         except wideq.NotLoggedInError:
-            #LOGGER.info("Session expired.")
+            refresh_attempts += 1
+            if refresh_attempts > max_refresh_tries:
+                raise UserError(
+                    "Falha de autenticacao com a LG apos varias tentativas. "
+                    "Refaca o login e valide os termos no app LG ThinQ."
+                )
+            LOGGER.warning(
+                "Sessao expirada/rejeitada. Tentando refresh (%s/%s)...",
+                refresh_attempts,
+                max_refresh_tries,
+            )
             client.refresh()
 
         except UserError as exc:
@@ -324,15 +374,15 @@ def example(country: str,
             # sys.exit(2)
             raise AttributeError
 
-    thinq2_devices = [dev for dev in client.devices if dev.platform_type == "thinq2"]
-    if len(thinq2_devices) > 0:
-        # Save the updated state.
-        state = client.dump()
-        with open(STATE_FILE, "w") as f:
-            json.dump(state, f)
-            #LOGGER.info("Dispositovo 'modelo' thinq2 '%s'", os.path.abspath(STATE_FILE))
+    # Save the updated state (gateway/auth/session) after login/refresh.
+    # This must happen even when no thinq2 devices are found, otherwise
+    # the next run will ask for authentication again.
+    state = client.dump()
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f)
+        #LOGGER.info("Estado salvo em '%s'", os.path.abspath(STATE_FILE))
 
-    dict_for_domoticz = {"gateway":state["gateway"], "auth":state["auth"]}
+    dict_for_domoticz = {"gateway": state.get("gateway", {}), "auth": state.get("auth", {})}
 
     return ac, dict_for_domoticz
 

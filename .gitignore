@@ -9,3 +9,5 @@ __pycache__
 .DS_Store
 # Ignore devcontainer for now (should this go in source control?)
 .devcontainerwideq_state.json
+
+wideq_state.json.bak.*

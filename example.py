@@ -326,6 +326,8 @@ def example(country: str,
         client._auth = authenticate(client.gateway)
 
     # Loop to retry if session has expired.
+    max_refresh_tries = 3
+    refresh_attempts = 0
     while True:
         try:
             ac = None
@@ -336,7 +338,17 @@ def example(country: str,
             break
 
         except wideq.NotLoggedInError:
-            LOGGER.info("Session expired.")
+            refresh_attempts += 1
+            if refresh_attempts > max_refresh_tries:
+                raise UserError(
+                    "Falha de autenticacao com a LG apos varias tentativas. "
+                    "Refaca o login e valide os termos no app LG ThinQ."
+                )
+            LOGGER.warning(
+                "Session expired/rejected. Trying refresh (%s/%s)...",
+                refresh_attempts,
+                max_refresh_tries,
+            )
             client.refresh()
 
         except UserError as exc:
@@ -349,15 +361,14 @@ def example(country: str,
             # sys.exit(2)
             raise AttributeError
 
-    thinq2_devices = [dev for dev in client.devices if dev.platform_type == "thinq2"]
-    if len(thinq2_devices) > 0:
-        # Save the updated state.
-        state = client.dump()
-        with open(STATE_FILE, "w") as f:
-            json.dump(state, f)
-            LOGGER.info("Wrote state file '%s'", os.path.abspath(STATE_FILE))
+    # Save the updated state (gateway/auth/session) after login/refresh.
+    # This must happen even when no thinq2 devices are found.
+    state = client.dump()
+    with open(STATE_FILE, "w") as f:
+        json.dump(state, f)
+        LOGGER.info("Wrote state file '%s'", os.path.abspath(STATE_FILE))
 
-    dict_for_domoticz = {"gateway":state["gateway"], "auth":state["auth"]}
+    dict_for_domoticz = {"gateway": state.get("gateway", {}), "auth": state.get("auth", {})}
 
     return ac, dict_for_domoticz
 

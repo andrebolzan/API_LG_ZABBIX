@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TARGET_DIR="/usr/lib/zabbix/externalscripts/API_LG"
 STATE_FILE="${TARGET_DIR}/wideq_state.json"
+WIDEQ_REPO_URL="https://github.com/sampsyo/wideq.git"
 
 require_root() {
   if [[ "${EUID}" -ne 0 ]]; then
@@ -14,7 +15,7 @@ require_root() {
 
 check_source_files() {
   local missing=0
-  for path in "${SCRIPT_DIR}/API_LG.py" "${SCRIPT_DIR}/wideq"; do
+  for path in "${SCRIPT_DIR}/API_LG.py"; do
     if [[ ! -e "${path}" ]]; then
       echo "Arquivo/pasta obrigatorio nao encontrado: ${path}"
       missing=1
@@ -47,16 +48,62 @@ install_python_deps() {
   fi
 }
 
+install_git_if_missing() {
+  if command -v git >/dev/null 2>&1; then
+    return
+  fi
+
+  echo "Instalando dependencia: git"
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get update
+    apt-get install -y git
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y git
+  elif command -v yum >/dev/null 2>&1; then
+    yum install -y git
+  elif command -v zypper >/dev/null 2>&1; then
+    zypper install -y git
+  else
+    echo "Nao foi possivel instalar git automaticamente."
+    echo "Instale o git manualmente e rode o script novamente."
+    exit 1
+  fi
+}
+
+install_wideq() {
+  local tmp_dir
+  tmp_dir="$(mktemp -d)"
+
+  if git clone --depth 1 "${WIDEQ_REPO_URL}" "${tmp_dir}/wideq-repo"; then
+    if [[ ! -d "${tmp_dir}/wideq-repo/wideq" ]]; then
+      echo "Clone do wideq concluido, mas pasta 'wideq/' nao foi encontrada."
+      exit 1
+    fi
+    rm -rf "${TARGET_DIR}/wideq"
+    cp -a "${tmp_dir}/wideq-repo/wideq" "${TARGET_DIR}/wideq"
+    echo "wideq instalado a partir de ${WIDEQ_REPO_URL}"
+  elif [[ -d "${SCRIPT_DIR}/wideq" ]]; then
+    echo "Falha ao baixar wideq do GitHub. Usando copia local do repositorio."
+    rm -rf "${TARGET_DIR}/wideq"
+    cp -a "${SCRIPT_DIR}/wideq" "${TARGET_DIR}/wideq"
+  else
+    echo "Falha ao baixar wideq e nao existe copia local para fallback."
+    rm -rf "${tmp_dir}"
+    exit 1
+  fi
+
+  rm -rf "${tmp_dir}"
+}
+
 copy_project_files() {
   mkdir -p "${TARGET_DIR}"
 
   cp -f "${SCRIPT_DIR}/API_LG.py" "${TARGET_DIR}/API_LG.py"
 
-  rm -rf "${TARGET_DIR}/wideq"
-  cp -a "${SCRIPT_DIR}/wideq" "${TARGET_DIR}/wideq"
+  install_wideq
 
   if [[ ! -f "${STATE_FILE}" ]]; then
-    echo '{"gateway": {}, "auth": {}}' > "${STATE_FILE}"
+    echo '{}' > "${STATE_FILE}"
   fi
 
   chmod 755 "${TARGET_DIR}/API_LG.py"
@@ -76,6 +123,7 @@ main() {
   require_root
   check_source_files
   install_python_deps
+  install_git_if_missing
   copy_project_files
   fix_owner_if_possible
 

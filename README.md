@@ -2,10 +2,18 @@
 
 Script Python para integrar dispositivos LG ThinQ (API v2) com o Zabbix via `externalscripts`.
 
+## Base do projeto
+
+Este projeto e baseado em `wideq`, de Sampson (Adrian Sampson):
+
+- https://github.com/sampsyo/wideq
+
+Neste repositorio, a logica customizada fica principalmente em `API_LG.py`.
+O `wideq` e obtido do repositorio oficial durante a instalacao para manter a versao atualizada.
+
 ## Conteudo do repositorio
 
 - `API_LG.py`: script principal para autenticar, listar dispositivos e executar comandos.
-- `wideq/`: biblioteca local usada para comunicacao com a API LG.
 - `install.sh`: instalador automatico para ambiente Zabbix.
 - `autenticacaoAPI.txt`: anotacoes de autenticacao e testes.
 
@@ -27,10 +35,11 @@ sudo bash install.sh
 
 O instalador faz:
 
-- Copia `API_LG.py` e pasta `wideq/` para `/usr/lib/zabbix/externalscripts/API_LG`
+- Copia `API_LG.py` para `/usr/lib/zabbix/externalscripts/API_LG`
+- Baixa o `wideq` direto de `https://github.com/sampsyo/wideq` (com fallback para copia local)
 - Cria `/usr/lib/zabbix/externalscripts/API_LG/wideq_state.json` (se nao existir)
 - Ajusta permissoes e owner para `zabbix:zabbix` (quando usuario/grupo existem)
-- Instala `python3-requests` (dependencia obrigatoria)
+- Instala `python3-requests` e `git` (dependencias obrigatorias)
 
 ## Primeira autenticacao LG
 
