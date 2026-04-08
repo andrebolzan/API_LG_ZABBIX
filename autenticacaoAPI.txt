@@ -1,0 +1,20 @@
+ #rodar programa com coutry BR
+ python3 example.py -c BR -l en-US
+
+ # pegar a URL e colar no navegado autneticar a conta e voltar com url complet para navegador
+
+ #Conferri se o arquivo wideq_state.json existe, ele é quem tem o "tokem" da API
+
+ #chamar API via Shell para conferir se esta tudo "certo"
+
+#forcar autenticacao:
+# remover arquiot atual de autenticacoa
+mv wideq_state.json wideq_state.json.bk
+#sem arquivo de stat o codigo exmeplo.py vai pedir auntenticacao
+python3 example.py -c BR -l en-US
+
+#alterar ower dos arquivos:
+chown -R zabbix:zabbix /usr/lib/zabbix/externalscripts/API_LG/
+
+./check_LG_AC.sh -D 46d806b5-60f2-1860-ba5a-1c392924f8ed -C 25 -A 10.0.13.38
+

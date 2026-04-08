@@ -9,36 +9,11 @@ import re
 import os.path
 import logging
 
-STATE_FILE_NAME = "wideq_state.json"
-LOGGER = logging.getLogger("wideq.example")
+STATE_FILE_NAME = "/usr/lib/zabbix/externalscripts/API_LG//wideq_state.json"
+#LOGGER = logging.getLogger("wideq.example")
+#LOGGER = logging.getLogger("wideq.example")
 
-# determine the wideq_state file location
-# non-docker location
-try:
-    loc_to_try = ".//plugins//domoticz_lg_thinq_plugin//" + STATE_FILE_NAME
-    with open(loc_to_try, 'r'):
-        STATE_FILE = loc_to_try
-        LOGGER.info("wideq_state file loaded from non-docker location.")
-except IOError:
-    # Synology NAS location
-    try:
-        loc_to_try = ".//var//plugins//domoticz_lg_thinq_plugin//" + STATE_FILE_NAME
-        with open(loc_to_try, 'r'):
-            STATE_FILE = loc_to_try
-            LOGGER.info("wideq_state file loaded from Synology NAS location.")
-    except IOError:
-        # docker location
-        try:
-            loc_to_try = ".//userdata//plugins//domoticz_lg_thinq_plugin//" + STATE_FILE_NAME
-            with open(loc_to_try, 'r'):
-                STATE_FILE = loc_to_try
-                LOGGER.info("wideq_state file loaded from docker location.")
-        except IOError:
-            STATE_FILE = STATE_FILE_NAME
-            LOGGER.error("wideq_state file not found. Trying to load default STATE_FILE: " + STATE_FILE_NAME)
-
-LOGGER.info("wideq_state will be loaded from: " + STATE_FILE)
-
+STATE_FILE = STATE_FILE_NAME
 
 def authenticate(gateway):
     """Interactively authenticate the user via a browser to get an OAuth
@@ -138,7 +113,7 @@ def ac_mon(ac):
         return
 
     try:
-        while True:
+  #       while True:
             time.sleep(1)
             state = ac.poll()
             if state:
@@ -305,7 +280,7 @@ def example(country: str,
         # if state data comes from wideq_state.json
         try:
             with open(STATE_FILE) as f:
-                LOGGER.info("State data loaded from " + os.path.abspath(STATE_FILE) + "'")
+                #LOGGER.info("Lendo token: " + os.path.abspath(STATE_FILE) + "'")
                 state = json.load(f)
         except IOError:
             LOGGER.error("No state file found (tried: '" + os.path.abspath(STATE_FILE) + "')")
@@ -336,7 +311,7 @@ def example(country: str,
             break
 
         except wideq.NotLoggedInError:
-            LOGGER.info("Session expired.")
+            #LOGGER.info("Session expired.")
             client.refresh()
 
         except UserError as exc:
@@ -355,7 +330,7 @@ def example(country: str,
         state = client.dump()
         with open(STATE_FILE, "w") as f:
             json.dump(state, f)
-            LOGGER.info("Wrote state file '%s'", os.path.abspath(STATE_FILE))
+            #LOGGER.info("Dispositovo 'modelo' thinq2 '%s'", os.path.abspath(STATE_FILE))
 
     dict_for_domoticz = {"gateway":state["gateway"], "auth":state["auth"]}
 
