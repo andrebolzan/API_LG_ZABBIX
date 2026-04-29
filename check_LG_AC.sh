@@ -25,9 +25,36 @@ Opcoes:
 EOF
 }
 
+check_env_permissions() {
+  # Require .env to not be accessible by "others".
+  if [[ -f "$ENV_FILE" ]] && command -v stat >/dev/null 2>&1; then
+    local perm other
+    perm="$(stat -c '%a' "$ENV_FILE" 2>/dev/null || true)"
+    other="${perm: -1}"
+    if [[ -n "$other" ]] && (( 10#$other > 0 )); then
+      echo "Permissao insegura em $ENV_FILE (use chmod 640 ou 600)." >&2
+      exit 10
+    fi
+  fi
+}
+
 if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
   show_help
   exit 0
+fi
+
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  PYTHON_BIN="$(command -v python3 || true)"
+fi
+
+check_env_permissions
+
+# Load token/country from fixed absolute .env path.
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
 fi
 
 if [[ "${1:-}" == "--ls" ]]; then
@@ -36,18 +63,6 @@ if [[ "${1:-}" == "--ls" ]]; then
     exit 2
   fi
   exec "$PYTHON_BIN" "$V2_TEST_SCRIPT" ls
-fi
-
-if [[ ! -x "$PYTHON_BIN" ]]; then
-  PYTHON_BIN="$(command -v python3 || true)"
-fi
-
-# Load token/country from absolute .env path for Zabbix execution context.
-if [[ -f "$ENV_FILE" ]]; then
-  set -a
-  # shellcheck disable=SC1090
-  source "$ENV_FILE"
-  set +a
 fi
 
 DEVICE_ID=""

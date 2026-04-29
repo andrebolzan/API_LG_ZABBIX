@@ -70,8 +70,13 @@ Criar link simbolico para compatibilidade da key no Zabbix:
 
 ```bash
 cd /usr/lib/zabbix/externalscripts
-ln -s API_LG/check_LG_AC.sh check_LG_AC.sh
+ln -s API_LG_ZABBIX/check_LG_AC.sh check_LG_AC.sh
 ```
+
+Por que usar pasta direta + link simbolico:
+- O parametro `ExternalScripts` do Zabbix aponta para um unico diretorio base.
+- Alguns cenarios/keys ficam mais simples usando `check_LG_AC.sh` direto na raiz desse diretorio.
+- O link simbolico evita duplicar script e garante que a execucao continue no codigo oficial de `API_LG_ZABBIX`.
 
 Depois reinicie o servico correspondente:
 
@@ -121,6 +126,28 @@ cat > .env <<'EOF'
 PAT=SEU_PAT
 LG_THINQ_COUNTRY=BR
 EOF
+```
+
+## Protecao Do .env
+
+Recomendado para evitar alteracoes indevidas e vazamento do PAT:
+
+```bash
+cd /usr/lib/zabbix/externalscripts/API_LG_ZABBIX
+chown root:zabbix .env
+chmod 640 .env
+```
+
+Opcional (ambientes Linux com `chattr`): travar arquivo contra escrita acidental.
+
+```bash
+chattr +i .env
+```
+
+Para editar depois:
+
+```bash
+chattr -i .env
 ```
 
 ## Comandos
