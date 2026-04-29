@@ -4,9 +4,51 @@ set -u
 # Compatibility wrapper for Zabbix template legacy format:
 # status;temp_atual;temp_meta;modo;ventilador;consumo
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-V2_TEST_SCRIPT="${SCRIPT_DIR}/teste.py"
-PYTHON_BIN="${PYTHON_BIN:-python3}"
+# Fixed install path for Zabbix execution.
+BASE_DIR="/usr/lib/zabbix/externalscripts/API_LG_ZABBIX"
+V2_TEST_SCRIPT="${BASE_DIR}/lg_cli.py"
+ENV_FILE="${BASE_DIR}/.env"
+PYTHON_BIN="${PYTHON_BIN:-/usr/bin/python3}"
+
+show_help() {
+  cat <<'EOF'
+Uso:
+  ./check_LG_AC.sh -D <DEVICE_ID>
+  ./check_LG_AC.sh --ls
+
+Opcoes:
+  -D <DEVICE_ID>   Device ID do equipamento LG (obrigatorio)
+  --ls             Lista dispositivos (alias;tipo;id)
+  -C <valor>       Reservado para compatibilidade (ignorado)
+  -A <valor>       Reservado para compatibilidade (ignorado)
+  -h, --help       Exibe esta ajuda
+EOF
+}
+
+if [[ "${1:-}" == "--help" || "${1:-}" == "-h" ]]; then
+  show_help
+  exit 0
+fi
+
+if [[ "${1:-}" == "--ls" ]]; then
+  if [[ ! -f "$V2_TEST_SCRIPT" ]]; then
+    echo "Arquivo nao encontrado: $V2_TEST_SCRIPT" >&2
+    exit 2
+  fi
+  exec "$PYTHON_BIN" "$V2_TEST_SCRIPT" ls
+fi
+
+if [[ ! -x "$PYTHON_BIN" ]]; then
+  PYTHON_BIN="$(command -v python3 || true)"
+fi
+
+# Load token/country from absolute .env path for Zabbix execution context.
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
 
 DEVICE_ID=""
 

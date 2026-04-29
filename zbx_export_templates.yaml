@@ -14,7 +14,7 @@ zabbix_export:
         status;tempAtual;tempMeta;modo;fan;consumo
 
         Exemplo de descoberta de dispositivos:
-        python3 teste.py ls
+        python3 lg_cli.py ls
 
         Use o ID retornado no comando acima na macro {$LG.AC.ID}.
       groups:

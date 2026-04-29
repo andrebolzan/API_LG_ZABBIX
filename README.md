@@ -9,7 +9,7 @@ Fontes oficiais:
 ## Estrutura
 
 - `API_LG.py`: cliente principal da API v2 (token/PAT).
-- `teste.py`: atalho para testar rapidamente o mesmo cliente.
+- `lg_cli.py`: atalho para testar rapidamente o mesmo cliente.
 - `check_LG_AC.sh`: wrapper para compatibilidade com item antigo do Zabbix.
 - `lg_v2_state.json`: arquivo local gerado automaticamente para guardar `client_id` e `country`.
 
@@ -23,6 +23,16 @@ Importante:
 - Ele **nao** guarda o PAT/token secreto.
 - O token deve ficar em `.env`, variavel de ambiente ou outro local seguro.
 
+## Download Para Zabbix
+
+Para baixar direto no diretorio de scripts externos do Zabbix:
+
+```bash
+cd /usr/lib/zabbix/externalscripts
+git clone https://github.com/andrebolzan/API_LG_ZABBIX.git
+cd API_LG_ZABBIX
+```
+
 ## Requisitos
 
 - Python 3
@@ -33,16 +43,6 @@ Instalacao de dependencia:
 
 ```bash
 pip3 install requests
-```
-
-## Download Para Zabbix
-
-Para baixar direto no diretorio de scripts externos do Zabbix:
-
-```bash
-cd /usr/lib/zabbix/externalscripts
-git clone https://github.com/andrebolzan/API_LG_ZABBIX.git
-cd API_LG_ZABBIX
 ```
 
 ## Permissoes E Diretorio No Zabbix
@@ -63,7 +63,14 @@ Configure o diretorio de scripts externos no Zabbix:
 Exemplo:
 
 ```conf
-ExternalScripts=/usr/lib/zabbix/externalscripts/API_LG_ZABBIX
+ExternalScripts=/usr/lib/zabbix/externalscripts/
+```
+
+Criar link simbolico para compatibilidade da key no Zabbix:
+
+```bash
+cd /usr/lib/zabbix/externalscripts
+ln -s API_LG/check_LG_AC.sh check_LG_AC.sh
 ```
 
 Depois reinicie o servico correspondente:
@@ -121,7 +128,7 @@ EOF
 Listar dispositivos (alias;tipo;id):
 
 ```bash
-python3 teste.py ls
+python3 lg_cli.py ls
 ```
 
 Importante para Zabbix:
@@ -131,7 +138,7 @@ Importante para Zabbix:
 Listar dispositivos em JSON:
 
 ```bash
-python3 teste.py ls --raw
+python3 lg_cli.py ls --raw
 ```
 
 Sobre `--raw`:
@@ -140,13 +147,19 @@ Sobre `--raw`:
 Status de um dispositivo:
 
 ```bash
-python3 teste.py status <DEVICE_ID> --raw
+python3 lg_cli.py status <DEVICE_ID> --raw
 ```
 
 Perfil de um dispositivo:
 
 ```bash
-python3 teste.py profile <DEVICE_ID> --raw
+python3 lg_cli.py profile <DEVICE_ID> --raw
+```
+
+Listagem via shell script (mesmo fluxo do Zabbix):
+
+```bash
+./check_LG_AC.sh --ls
 ```
 
 ## Grafana (Automatico com Zabbix)
